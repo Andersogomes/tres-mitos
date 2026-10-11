@@ -177,7 +177,7 @@ function card(q,onDone){
 // live updates: realtime + polling fallback
 let lastOk=0;
 async function poll(){try{await loadState();lastOk=Date.now();setConn(true,'ao vivo');}catch(e){setConn(false,'reconectando…');}}
-poll();setInterval(poll,3000);
+poll();(function loop(){setTimeout(()=>{poll();loop();},(rtOk?8000:3000)+Math.random()*1500);})();
 let rtOk=false;
 try{
   if(window.supabase){const sb=window.supabase.createClient(URL_,KEY,{auth:{persistSession:false}});
