@@ -56,6 +56,9 @@ input[type=text]:focus{outline:3px solid var(--violet);outline-offset:1px}
 .skip{display:block;margin-top:6px}
 .card,.wait{animation:in .35s cubic-bezier(.2,.8,.3,1) both}
 @keyframes in{from{opacity:0;transform:translateX(24px)}}
+.ot{display:flex;flex-direction:column;gap:4px;text-align:left}
+.ot small{font:500 14px/1.35 var(--f);opacity:.75}
+.opt[aria-pressed="true"] .ot small{opacity:.85}
 footer{font:500 12px var(--m);opacity:.6;margin-top:26px}
 @media (prefers-reduced-motion:reduce){.rock,.dot.live,.card,.wait{animation:none}}
 </style>
@@ -71,6 +74,11 @@ footer{font:500 12px var(--m);opacity:.6;margin-top:26px}
 (function(){
 const URL_='https://sthgjugqmqzaxzlulyni.supabase.co';
 const KEY='sb_publishable_X_v-esL9C44Fo5vLoObYxQ_PlRjvptm';
+const DESC={
+ 'Criar um atalho para a tela mais feita':'Template pronto com o sistema para o caso que o time mais repete. O caminho certo vira o mais rápido.',
+ 'Apagar o que ninguém usa':'Corte componentes e variantes sem reuso. Cada peça a menos é manutenção a menos.',
+ 'Automatizar uma tarefa repetida com AI':'Ensine as regras do sistema à AI, com uma skill ou um MCP, e deixe ela montar o rascunho.',
+ 'Colocar um guarda-corpo no erro mais comum':'Lint, contraste ou teste de acessibilidade que barra o erro antes de chegar em alguém.'};
 const SESSION=new URLSearchParams(location.search).get('s')||'detach2026';
 const app=document.getElementById('app');
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -144,7 +152,7 @@ function card(q,onDone){
   const otherWrap=document.createElement('div');otherWrap.className='other';
   const oin=document.createElement('input');oin.type='text';oin.maxLength=80;oin.placeholder='Qual?';oin.value=prev?prev.o:'';otherWrap.appendChild(oin);
   const btns=q.options.map(o=>{const b=document.createElement('button');b.type='button';b.className='opt'+(q.kind==='multi'?' multi':'');
-    b.innerHTML='<i></i><span></span>';b.querySelector('span').textContent=o;b.setAttribute('aria-pressed',sel.has(o));box.appendChild(b);return [o,b];});
+    b.innerHTML='<i></i><span class="ot"><span></span><small></small></span>';b.querySelector('.ot>span').textContent=o;const ds=DESC[o];if(ds)b.querySelector('small').textContent=ds;else b.querySelector('small').remove();b.setAttribute('aria-pressed',sel.has(o));box.appendChild(b);return [o,b];});
   const sync=()=>{btns.forEach(([o,b])=>b.setAttribute('aria-pressed',sel.has(o)));otherWrap.classList.toggle('on',[...sel].some(isOther));};
   const send=document.createElement('button');send.className='send';send.type='button';send.textContent='Enviar';
   const needSend=()=>q.kind==='multi'||[...sel].some(isOther);
