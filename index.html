@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3 Mitos · ao vivo</title>
+<meta name="theme-color" content="#AF9AF8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--ink:#0F0E0E;--bone:#FEF8F5;--lilac:#AF9AF8;--fire:#FCF6A0;--clay:#EB5938;--violet:#6E4FE3;--line:rgba(15,14,14,.16);
+  --f:"Archivo","Helvetica Neue",Arial,sans-serif;--m:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--lilac);color:var(--ink);font-family:var(--f)}
+body{min-height:100svh;padding:calc(16px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;font:500 13px var(--f);margin-bottom:22px}
+header b{font:900 15px var(--f);letter-spacing:-.01em;text-transform:uppercase}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink);margin-right:6px;vertical-align:1px;opacity:.35}
+.dot.live{background:var(--clay);opacity:1;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+h1{font:900 clamp(34px,10vw,46px)/.95 var(--f);text-transform:uppercase;letter-spacing:-.03em;margin:0 0 14px}
+.lead{font:500 18px/1.35 var(--f);margin:0 0 26px}
+.card{background:var(--bone);border:3px solid var(--ink);border-radius:14px;padding:18px 16px 16px;margin-bottom:16px}
+.q{font:800 21px/1.18 var(--f);margin:0 0 4px;letter-spacing:-.01em}
+.hint{font:500 13px var(--m);opacity:.65;margin:0 0 14px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts.scale{flex-direction:row}
+.opt{appearance:none;border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:10px;padding:14px 14px;font:700 17px var(--f);text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;min-height:52px;width:100%}
+.opts.scale .opt{justify-content:center;padding:14px 0;font-size:20px}
+.opt i{flex:none;width:20px;height:20px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center}
+.opt.multi i{border-radius:5px}
+.opt[aria-pressed="true"]{background:var(--ink);color:var(--bone)}
+.opt[aria-pressed="true"] i{border-color:var(--fire);background:var(--fire)}
+.opts.scale .opt i{display:none}
+.scale-lbl{display:flex;justify-content:space-between;font:500 12px var(--m);opacity:.65;margin-top:6px}
+.other{margin-top:10px;display:none}
+.other.on{display:block}
+input[type=text]{width:100%;font:600 17px var(--f);padding:14px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+input[type=text]:focus{outline:3px solid var(--violet);outline-offset:1px}
+.send{appearance:none;border:0;background:var(--ink);color:var(--bone);font:800 17px var(--f);padding:15px 18px;border-radius:999px;width:100%;margin-top:12px;cursor:pointer}
+.send[disabled]{opacity:.35}
+.status{font:500 14px var(--m);margin-top:10px;min-height:20px}
+.status.ok{color:var(--violet)}
+.status.err{color:var(--clay)}
+.wait{text-align:left;padding-top:8vh}
+.wait .big{font:900 clamp(40px,12vw,58px)/.92 var(--f);text-transform:uppercase;letter-spacing:-.03em;margin:0 0 18px}
+.rock{width:96px;height:96px;border-radius:50%;background:var(--ink);margin:0 0 28px;position:relative;animation:roll 3.2s ease-in-out infinite}
+.rock::after{content:"";position:absolute;inset:26% 22% auto auto;width:30%;height:22%;border-top:3px solid var(--bone);border-radius:50%}
+@keyframes roll{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(60px) rotate(220deg)}}
+.banner{background:var(--fire);border:3px solid var(--ink);border-radius:12px;padding:12px 14px;font:800 16px var(--f);margin-bottom:16px}
+footer{font:500 12px var(--m);opacity:.6;margin-top:26px}
+@media (prefers-reduced-motion:reduce){.rock,.dot.live{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header><b>3 Mitos</b><span><span class="dot" id="dot"></span><span id="conn">conectando…</span></span></header>
+  <div id="app"></div>
+  <footer>Detach! Fortaleza 2026 · respostas anônimas</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+const URL_='https://sthgjugqmqzaxzlulyni.supabase.co';
+const KEY='sb_publishable_X_v-esL9C44Fo5vLoObYxQ_PlRjvptm';
+const SESSION=new URLSearchParams(location.search).get('s')||'detach2026';
+const app=document.getElementById('app');
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const uuid=()=>(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)}));
+let voter=ls.get('mitos_voter');if(!voter){voter=uuid();ls.set('mitos_voter',voter);}
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+const qcache={};let state={grp:undefined,revealed:false};
+const answers=JSON.parse(ls.get('mitos_ans_'+SESSION)||'{}');
+const saveAns=()=>ls.set('mitos_ans_'+SESSION,JSON.stringify(answers));
+function setConn(live,txt){document.getElementById('dot').className='dot'+(live?' live':'');document.getElementById('conn').textContent=txt;}
+async function rest(path,opts){const r=await fetch(URL_+path,Object.assign({headers:H},opts));if(!r.ok){let m='';try{m=(await r.json()).message}catch(e){};throw new Error(m||('HTTP '+r.status));}return r.status===204?null:r.json();}
+async function loadState(){const rows=await rest('/rest/v1/mitos_session?id=eq.'+encodeURIComponent(SESSION)+'&select=active_grp,revealed');const s=rows[0]||{};apply(s.active_grp||null,!!s.revealed);}
+async function loadQs(grp){if(qcache[grp])return qcache[grp];const rows=await rest('/rest/v1/mitos_question?grp=eq.'+encodeURIComponent(grp)+'&select=id,ord,kind,prompt,options&order=ord');qcache[grp]=rows;return rows;}
+function apply(grp,revealed){
+  const changed=grp!==state.grp;state={grp,revealed};
+  if(changed)render();else{const b=document.getElementById('banner');if(b)b.hidden=!revealed;}
+}
+function waitView(){app.innerHTML='';const w=document.createElement('div');w.className='wait';
+  w.innerHTML='<div class="rock" aria-hidden="true"></div><p class="big">Aguarde a próxima pergunta.</p><p class="lead">Deixe esta página aberta. Quando a pergunta aparecer no telão, ela aparece aqui também.</p>';app.appendChild(w);}
+async function render(){
+  if(!state.grp){waitView();return;}
+  let qs;try{qs=await loadQs(state.grp);}catch(e){app.innerHTML='<p class="lead">Não consegui carregar a pergunta. Tentando de novo…</p>';setTimeout(render,3000);return;}
+  if(!qs.length){waitView();return;}
+  app.innerHTML='';
+  const bn=document.createElement('div');bn.className='banner';bn.id='banner';bn.textContent='Resultado no telão. Você ainda pode mudar sua resposta.';bn.hidden=!state.revealed;app.appendChild(bn);
+  qs.forEach(q=>app.appendChild(card(q)));
+  if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}
+}
+function card(q){
+  const c=document.createElement('section');c.className='card';
+  const h=document.createElement('p');h.className='q';h.textContent=q.prompt;c.appendChild(h);
+  const hint=document.createElement('p');hint.className='hint';
+  hint.textContent={multi:'Marque quantas quiser',single:'Escolha uma',scale:'De 1 a 5',open:'Resposta curta'}[q.kind];c.appendChild(hint);
+  const st=document.createElement('p');st.className='status';
+  const prev=answers[q.id];
+  const done=t=>{st.className='status ok';st.textContent=t||'Resposta enviada ✓ Você pode mudar.';};
+  if(prev)done();
+  async function submit(choices,other,btn){
+    st.className='status';st.textContent='Enviando…';if(btn)btn.disabled=true;
+    try{await rest('/rest/v1/rpc/mitos_submit',{method:'POST',body:JSON.stringify({p_session:SESSION,p_question:q.id,p_voter:voter,p_choices:choices,p_other:other||null})});
+      answers[q.id]={c:choices,o:other||''};saveAns();done();}
+    catch(e){st.className='status err';st.textContent=/closed/.test(e.message)?'Esta pergunta já fechou.':/empty/.test(e.message)?'Escreva sua resposta antes de enviar.':'Não foi possível enviar. Tente de novo.';}
+    finally{if(btn)btn.disabled=false;}
+  }
+  if(q.kind==='open'){
+    const inp=document.createElement('input');inp.type='text';inp.maxLength=80;inp.placeholder='Escreva aqui';inp.value=prev?prev.o:'';inp.autocomplete='off';
+    const b=document.createElement('button');b.className='send';b.type='button';b.textContent='Enviar';
+    b.onclick=()=>submit([],inp.value.trim(),b);inp.onkeydown=e=>{if(e.key==='Enter')b.click();};
+    c.append(inp,b,st);return c;
+  }
+  const box=document.createElement('div');box.className='opts'+(q.kind==='scale'?' scale':'');
+  const sel=new Set(prev?prev.c:[]);
+  const isOther=o=>o==='Outro'||o==='Outra';
+  const otherWrap=document.createElement('div');otherWrap.className='other';
+  const oin=document.createElement('input');oin.type='text';oin.maxLength=80;oin.placeholder='Qual?';oin.value=prev?prev.o:'';otherWrap.appendChild(oin);
+  const btns=q.options.map(o=>{const b=document.createElement('button');b.type='button';b.className='opt'+(q.kind==='multi'?' multi':'');
+    b.innerHTML='<i></i><span></span>';b.querySelector('span').textContent=o;b.setAttribute('aria-pressed',sel.has(o));box.appendChild(b);return [o,b];});
+  const sync=()=>{btns.forEach(([o,b])=>b.setAttribute('aria-pressed',sel.has(o)));otherWrap.classList.toggle('on',[...sel].some(isOther));};
+  const send=document.createElement('button');send.className='send';send.type='button';send.textContent='Enviar';
+  const needSend=()=>q.kind==='multi'||[...sel].some(isOther);
+  const syncSend=()=>{send.hidden=!needSend();send.disabled=sel.size===0;};
+  btns.forEach(([o,b])=>b.onclick=()=>{
+    if(q.kind==='multi'){
+      if(o==='Nenhuma'){const had=sel.has(o);sel.clear();if(!had)sel.add(o);}
+      else{sel.delete('Nenhuma');sel.has(o)?sel.delete(o):sel.add(o);}
+      sync();syncSend();st.textContent='';
+    }else{
+      sel.clear();sel.add(o);sync();syncSend();
+      if(!isOther(o))submit([o],null,null);else{st.textContent='';oin.focus();}
+    }
+  });
+  send.onclick=()=>submit([...sel],[...sel].some(isOther)?oin.value.trim():null,send);
+  oin.onkeydown=e=>{if(e.key==='Enter')send.click();};
+  sync();syncSend();
+  c.append(box);
+  if(q.kind==='scale'){const l=document.createElement('div');l.className='scale-lbl';l.innerHTML='<span>nada</span><span>em tudo</span>';c.appendChild(l);}
+  c.append(otherWrap,send,st);return c;
+}
+// live updates: realtime + polling fallback
+let lastOk=0;
+async function poll(){try{await loadState();lastOk=Date.now();setConn(true,'ao vivo');}catch(e){setConn(false,'reconectando…');}}
+poll();setInterval(()=>{if(!rtOk||Date.now()-lastOk>20000)poll();},4000);
+let rtOk=false;
+try{
+  if(window.supabase){const sb=window.supabase.createClient(URL_,KEY,{auth:{persistSession:false}});
+    sb.channel('mitos-'+SESSION).on('postgres_changes',{event:'UPDATE',schema:'public',table:'mitos_session',filter:'id=eq.'+SESSION},p=>{lastOk=Date.now();apply(p.new.active_grp||null,!!p.new.revealed);})
+      .subscribe(s=>{rtOk=(s==='SUBSCRIBED');if(rtOk){lastOk=Date.now();setConn(true,'ao vivo');}});}
+}catch(e){rtOk=false;}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+})();
+</script>
+</body>
+</html>
