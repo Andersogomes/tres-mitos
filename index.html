@@ -93,7 +93,8 @@ function waitView(){app.innerHTML='';const w=document.createElement('div');w.cla
 let QS=[],cur=0;
 async function render(){
   if(!state.grp){waitView();return;}
-  let qs;try{qs=await loadQs(state.grp);}catch(e){app.innerHTML='<p class="lead">Não consegui carregar a pergunta. Tentando de novo…</p>';setTimeout(render,3000);return;}
+  const want=state.grp;let qs;try{qs=await loadQs(want);}catch(e){app.innerHTML='<p class="lead">Não consegui carregar a pergunta. Tentando de novo…</p>';setTimeout(render,3000);return;}
+  if(state.grp!==want)return;
   if(!qs.length){waitView();return;}
   QS=qs;show(0);
   if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}
@@ -128,7 +129,7 @@ function card(q,onDone){
     st.className='status';st.textContent='Enviando…';if(btn)btn.disabled=true;
     try{await rest('/rest/v1/rpc/mitos_submit',{method:'POST',body:JSON.stringify({p_session:SESSION,p_question:q.id,p_voter:voter,p_choices:choices,p_other:other||null})});
       answers[q.id]={c:choices,o:other||''};saveAns();done('Enviado ✓');onDone&&onDone();}
-    catch(e){st.className='status err';st.textContent=/closed/.test(e.message)?'Esta pergunta já fechou.':/empty/.test(e.message)?'Escreva sua resposta antes de enviar.':'Não foi possível enviar. Tente de novo.';}
+    catch(e){st.className='status err';if(/closed/.test(e.message))setTimeout(poll,300);st.textContent=/closed/.test(e.message)?'Esta pergunta já fechou.':/empty/.test(e.message)?'Escreva sua resposta antes de enviar.':'Não foi possível enviar. Tente de novo.';}
     finally{if(btn)btn.disabled=false;}
   }
   if(q.kind==='open'){
