@@ -95,8 +95,7 @@ async function render(){
   if(!state.grp){waitView();return;}
   let qs;try{qs=await loadQs(state.grp);}catch(e){app.innerHTML='<p class="lead">Não consegui carregar a pergunta. Tentando de novo…</p>';setTimeout(render,3000);return;}
   if(!qs.length){waitView();return;}
-  QS=qs;const first=qs.findIndex(q=>!answers[q.id]);
-  show(first<0?qs.length:first);
+  QS=qs;show(0);
   if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}
 }
 function banner(){const bn=document.createElement('div');bn.className='banner';bn.id='banner';bn.textContent='Resultado no telão.';bn.hidden=!state.revealed;return bn;}
@@ -108,7 +107,7 @@ function show(i){
   if(i>0){const bk=document.createElement('button');bk.type='button';bk.className='link';bk.textContent='← anterior';bk.onclick=()=>show(i-1);top.appendChild(bk);}
   app.appendChild(top);
   const g=state.grp;const c=card(QS[i],()=>setTimeout(()=>{if(cur===i&&state.grp===g)show(i+1);},650));
-  if(answers[QS[i].id]){const sk=document.createElement('button');sk.type='button';sk.className='link skip';sk.textContent=i+1<QS.length?'Manter resposta e seguir →':'Manter resposta →';sk.onclick=()=>show(i+1);c.appendChild(sk);}
+  if(answers[QS[i].id]){const sk=document.createElement('button');sk.type='button';sk.className='link skip';sk.textContent=i+1<QS.length?'Manter resposta e seguir →':'Manter resposta →';sk.onclick=async()=>{const pv=answers[QS[i].id];sk.disabled=true;try{await rest('/rest/v1/rpc/mitos_submit',{method:'POST',body:JSON.stringify({p_session:SESSION,p_question:QS[i].id,p_voter:voter,p_choices:pv.c,p_other:pv.o||null})});}catch(e){}show(i+1);};c.appendChild(sk);}
   app.appendChild(c);window.scrollTo({top:0});
 }
 function doneView(){
@@ -124,8 +123,7 @@ function card(q,onDone){
   hint.textContent={multi:'Marque quantas quiser',single:'Escolha uma',scale:'De 1 a 5',open:'Resposta curta'}[q.kind];c.appendChild(hint);
   const st=document.createElement('p');st.className='status';
   const prev=answers[q.id];
-  const done=t=>{st.className='status ok';st.textContent=t||'Você já respondeu. Pode mudar.';};
-  if(prev)done();
+  const done=t=>{st.className='status ok';st.textContent=t||'';};
   async function submit(choices,other,btn){
     st.className='status';st.textContent='Enviando…';if(btn)btn.disabled=true;
     try{await rest('/rest/v1/rpc/mitos_submit',{method:'POST',body:JSON.stringify({p_session:SESSION,p_question:q.id,p_voter:voter,p_choices:choices,p_other:other||null})});
