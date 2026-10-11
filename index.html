@@ -67,7 +67,7 @@ footer{font:500 12px var(--m);opacity:.6;margin-top:26px}
 <main>
   <header><b>3 Mitos</b><span><span class="dot" id="dot"></span><span id="conn">conectando…</span></span></header>
   <div id="app"></div>
-  <footer>Detach! Fortaleza 2026 · respostas anônimas <span id="dbg"></span></footer>
+  <footer>Detach! Fortaleza 2026 · respostas anônimas</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -92,7 +92,7 @@ function setConn(live,txt){document.getElementById('dot').className='dot'+(live?
 async function rest(path,opts){const r=await fetch(URL_+path,Object.assign({headers:H},opts));if(!r.ok){let m='';try{m=(await r.json()).message}catch(e){};throw new Error(m||('HTTP '+r.status));}return r.status===204?null:r.json();}
 async function loadState(){const rows=await rest('/rest/v1/mitos_session?id=eq.'+encodeURIComponent(SESSION)+'&select=active_grp,revealed');const s=rows[0]||{};apply(s.active_grp||null,!!s.revealed);}
 async function loadQs(grp){if(qcache[grp])return qcache[grp];const rows=await rest('/rest/v1/mitos_question?grp=eq.'+encodeURIComponent(grp)+'&select=id,ord,kind,prompt,options&order=ord');qcache[grp]=rows;return rows;}
-function apply(grp,revealed){const dg=document.getElementById('dbg');if(dg)dg.textContent='· '+(grp||'—');
+function apply(grp,revealed){
   const changed=grp!==state.grp;state={grp,revealed};
   if(changed)render();else{const b=document.getElementById('banner');if(b)b.hidden=!revealed;}
 }
