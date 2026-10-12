@@ -59,8 +59,12 @@ input[type=text]:focus{outline:3px solid var(--violet);outline-offset:1px}
 .ot{display:flex;flex-direction:column;gap:4px;text-align:left}
 .ot small{font:500 14px/1.35 var(--f);opacity:.75}
 .opt[aria-pressed="true"] .ot small{opacity:.85}
+.done-ok{width:96px;height:96px;border-radius:50%;background:var(--ink);display:grid;place-items:center;margin:0 0 28px;animation:pop .45s cubic-bezier(.3,1.5,.5,1) both}
+.done-ok svg{width:56px;height:56px;fill:none;stroke:var(--fire);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .5s .25s ease-out forwards}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+@keyframes draw{to{stroke-dashoffset:0}}
 footer{font:500 12px var(--m);opacity:.6;margin-top:26px}
-@media (prefers-reduced-motion:reduce){.rock,.dot.live,.card,.wait{animation:none}}
+@media (prefers-reduced-motion:reduce){.rock,.dot.live,.card,.wait,.done-ok{animation:none}.done-ok svg{animation:none;stroke-dashoffset:0}}
 </style>
 </head>
 <body>
@@ -121,7 +125,7 @@ function show(i){
 }
 function doneView(){
   const w=document.createElement('div');w.className='wait';
-  w.innerHTML='<div class="rock" aria-hidden="true"></div><p class="big">Respostas enviadas.</p><p class="lead">Olhe para o telão. Quando a próxima pergunta abrir, ela aparece aqui sozinha.</p>';
+  w.innerHTML='<div class="done-ok" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13 25l7 7 15-16"/></svg></div><p class="big">Respostas enviadas.</p><p class="lead">Olhe para o telão. Quando a próxima pergunta abrir, ela aparece aqui sozinha.</p>';
   const rv=document.createElement('button');rv.type='button';rv.className='link';rv.textContent='Revisar minhas respostas';rv.onclick=()=>show(0);w.appendChild(rv);
   app.appendChild(w);window.scrollTo({top:0});
 }
@@ -177,8 +181,8 @@ function card(q,onDone){
 // live updates: realtime + polling fallback
 let lastOk=0;
 async function poll(){try{await loadState();lastOk=Date.now();setConn(true,'ao vivo');}catch(e){setConn(false,'reconectando…');}}
-poll();(function loop(){setTimeout(()=>{poll();loop();},(rtOk?8000:3000)+Math.random()*1500);})();
 let rtOk=false;
+poll();(function loop(){setTimeout(()=>{poll();loop();},(rtOk?8000:3000)+Math.random()*1500);})();
 try{
   if(window.supabase){const sb=window.supabase.createClient(URL_,KEY,{auth:{persistSession:false}});
     sb.channel('mitos-'+SESSION).on('postgres_changes',{event:'UPDATE',schema:'public',table:'mitos_session',filter:'id=eq.'+SESSION},p=>{lastOk=Date.now();apply(p.new.active_grp||null,!!p.new.revealed);})
